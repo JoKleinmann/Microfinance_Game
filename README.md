@@ -11,7 +11,7 @@ install.packages("RTutor",repos = c("https://skranz-repo.github.io/drat/",getOpt
 if (!require(devtools))
   install.packages("devtools")
 
-devtools::install_github("Jokleinmann/Microfinance_Games")
+devtools::install_github("Jokleinmann/Microfinance_Games", upgrade_dependencies=FALSE)
 ```
 
 ## 2. Show and work on the problem set
