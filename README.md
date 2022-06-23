@@ -1,6 +1,6 @@
 This package constitutes an interactive R problem set based on the RTutor package (https://github.com/skranz/RTutor). 
 
---- In this interactive problem set incentives are tested to increase repayment rates in micro finacne ---
+--- In this interactive problem set incentives are tested to increase repayment rates in micro finance ---
 
 ## 1. Installation
 
