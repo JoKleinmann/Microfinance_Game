@@ -6,7 +6,7 @@ Date: 2022-23-06
 Author: Joschka Kleinmann
 Maintainer: Joschka Kleinmann <joschka.kleinmann@uni-ulm.de>
 Description: RTutor problem set Microfinance Games
-License: Not yet licensed by the author. The default suggestion for licensing is
+License: 
 	Problem set content: Creative Commons (CC BY-SA)
 	Package code: GPL >= 2.0
 Depends: RTutor, ggplot2, foreign, dplyr, lfe, stargazer, fixest, nnet, data.tree, DiagrammeR
