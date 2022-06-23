@@ -1,0 +1,1452 @@
+
+```{r 'check_ps', include=FALSE}
+
+user.name = 'ENTER A USER NAME HERE'
+```
+
+
+## Exercise Overview
+
+# Experimental exploring microfinance Institution
+
+
+Author: Joschka Kleinmann
+
+
+Welcome to this interactive R problem set. Here we will take a deeper look at the paper "Microfinance Games" by Xavier Giné, Pamela Jakiela, Dean Karlan, and Jonathan Morduch, which was published in the American Economic Journal: Applied Economics 2 (July 2010). This paper takes an experimental approach to understanding and solving liability problems in microfinance. 
+This problem set is part of my master thesis at the University of Ulm.
+The paper and data can be found at:
+
+Paper: https://www.aeaweb.org/articles?id=10.1257/app.2.3.60
+Data: https://www.openicpsr.org/openicpsr/project/113760/version/V1/view
+
+The idea of microfinance was developed by, among others, Muhammad Yunus in 1983, who was awarded the Nobel Peace Prize for this invention and his efforts to fight poverty (Nobel Prize, 2006). Microfinance was then implemented by non-profit organizations and banks to provide access to bank-like credits to citizens in rural areas and to fight poverty. Women in particular are clients of microfinance to increase their financial independence (Datta, Sahu 2022). The idea behind microfinance is that poor households can obtain credits where banking systems are not available or acces is denied. With these loans, the recipients could then buy machinery or land/seeds to increase their productivity and escape poverty with this investment and be able to repay the loan after some time. In recent decades, however, microfinance has moved to a commercial approach, with the likelihood of high profits because higher interest rates are charged than in normal contracts (Christen, 2001). A recent example is a Mexican microfinance institution (MFI) with an annual return on equity of over 20% (Gavin, 2022). MFIs lend to poor people, which leads to problems in lending. Therefore, solutions have been developed to increase repayment rates. Repayment rates have dropped significantly in the recent Corona crisis, which has reinforced the importance of finding a solution to this problem (Malik, Meki, Morduch, Ogden, Quinn, Said, 2020). One way to increase repayment rates is through so-called joint liability contracts. In this approach, a group of borrowers is responsible for repaying the loan, meaning that the group must repay the loan for an individual in the group if that individual does not repay the loan himself.
+In this problem set we will analyze the best techniques to increase repayment rates while also deepen our knowledge in statistics and analyzing experimental data.
+
+
+The content of this problem set will be structured as follows.
+
+
+# Exercise Content:
+1.	Introduction
+2.	Experimental setup
+3.	Results of the experiment 
+4.	OLS Regressions
+4.1	Clustered robust Standard Error 
+4.2	Fixed Effects
+5.	Subject pool representation check
+5.1 Checking randomization
+6.	Multinominal Logit Regression
+7.	Conclusion
+8.	References
+
+
+
+
+
+
+In the introductory section, we will introduce the experiment of Giné et al. (2010) and provide an overview of their work using a specific example by looking at the decisions of one participant. Chapter two will focus on how the authors designed and conducted their experiment, and we will get an overview of the decision changes of the participant we observed in chapter one.
+In chapter three, we will look at the results of the experiment.
+Chapter four looks at OLS regressions, including explanations of fixed effects and cluster robust standard errors and why they should be used. In the next chapter, we will analyze the data to see if they are representative and to see if the participants in the experiment are the average of the population that uses microfinance. We will also run statistical tests to see if the characteristics of the subjects in the different treatments were balanced. In chapter six, we will run a multinomial logit regression and analyze the results. Finally, we will summarize the problemset, draw a conclusion, and identify what might be explored in future research.
+
+
+## How to solve the problem set
+
+Solving the problem set works as follows: 
+There are always text parts that inform about the topic of the chapter and code chunks that have to be partially solved or are already solved. At the beginning of each chapter the `edit` button must be pressed. Then you may need to enter the code or if it is already there you should press `check`. If you need help you can press `hint`. If you can't find the solution you can also click on `solution` to show the complete code. At the end of the chunk no matter if you got the result by your own solution or by the solution shown by `solution` you have to press `check` to execute the commands and to being able tp edit the next code chunk.  Infoboxes and noteblocks give extra information about a topic or R commands. 
+
+
+## Exercise 1 Introduction
+Giné et al. conducted a laboratory experiment in a Peruvian city over a seven-month period to examine what incentives would increase repayment rates or the decision to make a risky/safe investment in microfinance. They recruited individuals who were owners or employees of microenterprises, as these individuals are the typical clients for microloans. Participants received an entry fee and were allowed to keep any profits they made during the experiment. 
+Individuals were allowed to participate in more than one experimental season. 
+A minimum of two rounds and a maximum of ten rounds were played in each experimental season. The experimental season could end each round with a certain probability as soon as the first two rounds were played. This was known to the players and served to avoid unreasonably long game times. In addition, if players knew in which round the experiment would end, they might play differently, especially in the last round, since the risk of players not getting a new credit was eliminated in that round because the experiment ended.
+Participants in the experiment were randomly assigned to one of ten scenarios each time. The ten scenarios gave different incentives to increase or decrease the repayment rate or the overall risky project choce rate. In all scenarios, each player received 100 points as starting capital in each round, which the player had to repay after the round. The player then had to decide whether to invest the money in a safe or a risky project. If the player decided to invest in the safe project, he was sure to receive 200 points. If the player invested in the risky project, there were two possible outcomes, both with a probability of 50%, either a return of 600 or a return of 0. After each round, the player then had to pay back the 100 points if he had earned enough points in that round.
+Later in this problem set we will discuss all ten scenarios, but for now we will start with the simplest one to understand the experiment. This scenario is called the "Individual Repeated One Shot Game" in the data. 
+Let's take a quick quiz on the expected returns for this scenario.
+
+
+Quiz: What is the expected net total return if a player decides to invest in the safe project?
+
+[1]: 100
+[2]: 200
+[3]: 300
+[4]: 600
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("one")
+```
+
+
+Quiz: What is the expected net return on the risky project?
+
+[1]: 200
+[2]: 250
+[3]: 300
+[4]: 600
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("two")
+```
+
+As we can see, the expected net return is higher for the risky project, which is important because otherwise only some risky players would play the risky scenario and we would have few risky investments in all treatments, regardless of the scenario. 
+
+For all scenarios, the starting capital and the return on investment were the same. The return on the project in previous rounds was stored in an extra account and players could not reach these points during the experiment. That is, if a player chose the risky project and failed, he did not have to or could not repay the loan with the points from the past rounds. 
+
+In the scenario we are now considering, each player was liable only for his own debts. In this scenario, there were also no dynamic incentives built in. Dynamic incentives mean that a player who is unable to repay the loan will not receive a new loan in the next round and therefore will not be able to play another round, and will have to wait until the experimental season is over. 
+Now that we know how the experiment was conducted for this particular scenario, we will analyze the decisions of a particular player who played this scenario. 
+First, we need to load the dataset with the "foreign" package.
+The data set is called “AEJApp20070006gamedata.dta” and we will safe it as “game”
+
+
+
+## Data overview
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("foreign package")
+```
+
+
+**Task:** load the `foreign` package and safe the data by using the command `read.dta``
+```{r "2_1"}
+library(___)
+game <- ___("AEJApp20070006gamedata.dta")
+
+```
+Let’s get an overview of the data and try to understand it.
+We can check the data structure with the command **str()** or the first lines with **head()**. 
+
+**Task:** Use the `str` and `head `command on *game*:
+```{r "2_2"}
+# Enter your code here.
+```
+As we can see, the outputs are a set of numbers and headings that we cannot yet interpret efficiently. We only know that they are both numeric and integer columns from the **str** command.
+We can count the number of columns in the data with the **ncol** command
+
+**Task:** Use `ncol` on *game* 
+```{r "2_3"}
+ ncol(___)
+
+```
+As we see we got 97 columns. 
+We will now analyze a specific player with the uID 459 to better understand both the game and the data. The uID is the unique ID given to each participant in the experiment. This player we are looking at played in three seasons. If a player chooses to play the risky round, the dummy variable *risky* has a value of 1, and 0 otherwise. If a player is able to repay his loan, the dummy variable *repay* has a value of 1, and 0 if the player is unable to repay the loan.
+
+## Player 459
+
+Let's take the example player in game season **166**. Like the uID, each game season also has a unique number. Since players could play in more than one game season, we need to filter by both the uID and the game season to get only the results for one player in one game. For filtering in R, the filter function from dplyr is suitable. 
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("dplyr package")
+```
+
+
+
+
+
+**Task:** Load the package `dplyr` and then `filter` game for the *uid* and *game_num* also select the columns *round* and *project*. Then use the command `arrange` to order by *round*
+```{r "2_4"}
+library(dplyr)
+filter(game, ___==166, uid==459)%>% select(___,project)%>% arrange(___)
+
+```
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("The pipe operator %>%")
+```
+
+
+As we can see, this season lasted six rounds and player 459 chose the risky project three times and the safe project three times. Now let's check if it was worth it for him to choose the risky project instead of playing safe all the time.
+To do this, we use the pay back dummy variable, which is 1 if the player was able to pay back the loan and 0 if not. If the player was able to pay back, the project was a success.  In the data, there is a dummy variable for each analysis we want to perform in this problem set. If you want to know how to create a dummy variable and save it in the dataset, just click on the **Dummy Variable** notes.
+
+
+
+
+#! start_note "dummy variable"
+Dummy variables take the values 1 or 0.
+The ifelse function from Basic R is suitable for creating dummy variables. As an example, we want to create a dummy variable that takes the value 1 if a player is older than the average age of all players, and the value 0 if the player is younger. To do this, we must first determine the average age of a participant. We will calculate the mean *age* for each scenario later in the exercise but for now we will take the overall mean of *age*. Just run the code to find the mean *age* of the players. 
+**Task:** Run the code
+```{r "2_5"}
+library(dplyr)
+gamefiltered <- distinct(game, uid, .keep_all = TRUE)
+mean(gamefiltered$age, na.rm=TRUE)
+```
+As we can see, the result is that the mean value of the player age is 34.34 years.
+Now let's create the dummy variable "dummyage", which has the value 1 if the player is older than the mean *age*, and the value 0 if the player is younger.
+
+**Task:** Run the code
+```{r "2_6"}
+ gamefiltered$dummyage<- ifelse(gamefiltered$age<=34.3, 0, 1)
+```
+We have now added the dummy variable. 
+To test if it worked, we can use the **table** function to count how many times the 0 and how many times the 1 is represented in our data frame. If we don't get an error, the dummy variable has been created and we also know a bit more about our participants.
+```{r "2_7"}
+ table(gamefiltered$dummyage)
+```
+As we can see, we have 176 players with age below 34.3 years and 130 with age above 34.3 years. 
+
+#! end_note
+
+Now before we look at how often success occurred, what do you think.
+
+Was Player 459's strategy better than always playing the safe option?
+
+
+
+
+
+Let’s calculate if you guessed right.
+You might need to press `edit` befor you are able to solve the chunk.
+**Task:** Add repay to the calculation we just did and save it as player_459.
+```{r "2_8"}
+Player_459<- filter(game, game_num==166, uid==459)%>% select(round,project,___)%>% arrange(round)
+
+```
+We see that player 459 was able to repay the loans five times and failed once. With this knowledge, we can calculate the profit for player 459. We could just use R like a calculator, but we want to find a more general solution. Using the dyplr package, we can use the **case when** function along with **mutate** to create a new column of data containing the payoffs the player received. We store this solution as the **revenue** column in the Player_459 data frame and then use the **sum** function to calculate the return. We will also calculate the return that the player would have received if he had only played the safe project. 
+**Task:** Run the code
+```{r "2_9"}
+Player_459 = Player_459 %>% mutate(
+  revenue = case_when(
+    repay == 0  ~ 0,
+    project == "Risky project"  ~ 600,
+    project == "Safe project"  ~ 200,
+    TRUE ~ NA_real_
+  )
+)
+sum(Player_459$revenue)
+
+revenue_allsafe <- 6*200
+revenue_allsafe
+```
+We can see that the revenue with 1800 that player 459 received was much higher than if he had played the safe result, which was only 1200. Playing an `all risk strategy` in this scenario with six rounds yields already the same if two risky projects were successful compared to the `all safe strategy`. Therefore, the probability that a player who chooses only the risky project will do at least as well as the safe player is 89.06%. A player who plays only the risky project has also a probability of 65.63% to get a higher return. 
+However, this is only true for this first scenario, where there are no dynamic incentives or group landing contracts and if six rounds are played. 
+The other scenarios that were played are discussed in the next chapter, as well as the number of runs of each scenario. 
+
+
+
+
+
+
+
+
+
+## Exercise 2. Experimental setup
+
+In the last chapter, we discussed a scenario that was played in the experiment. Now we will look at the other scenarios and see what player 459 played in the other scenarios he participated in.
+
+The ten scenarios played can be divided into five base scenarios. Each base scenario was played once with dynamic incentives and once without these incentives. 
+Since we already discussed the first scenario in the first chapter, I will only briefly review the general conditions for all scenarios here. 
+
+The general conditions for all scenarios are that each player receives 100 points at the beginning of each round. The player must then choose to invest the points either in a safe project with a safe return of 200 or in a risky project that earns 600 points or 0 points with a 50% probability of each outcome. 
+Eight scenarios were played with group liability contracts. In these contracts, one is liable not only for one's own contract, but for the entire group under that contract. In the experiment, a group consisted of two players. 
+
+## Scenarios
+
+
+The first two scenarios are the **Individual Repeated One Shot Game**, which we discussed in chapter one, and the **Individual Dynamic Game**. Both scenarios are the same, but the **Individual Dynamic Game** has dynamic incentives built in. Just a reminder, dynamic incentive means that if a player fails to repay the loan and no other player repays the loan for that player, the player will not receive a new loan and therefore will no longer be able to participate in the experiment for this game season. 
+
+The third and fourth scenarios are joint liability games, referred to in the data as **Group Repeated One Shot Game w/o Monitoring** and **Group Dynamic Game w/o Monitoring**. Each player was randomly assigned to another player, and they were responsible for repaying each other's credit if the other player failed to repay his or her credit. The players did not know who they were matched with or what the other participant was playing. They would not realize that the other player had chosen the risky project until they had to repay their partner's loan, implying imperfect information. The third and fourth scenarios are nearly the same, but once with and once without dynamic incentives. 
+
+The fifth and sixth scenarios are joint liability games, but this time the players were informed about what their partner had played in the previous round. Apart from this change, the rules were the same as in scenarios three and four. The ability to view a teammate's past decicion is called monitoring. Players were randomly assigned to a partner and had to choose between a risky or safe project. As with the other scenarios, these scenarios were played in some experimental settings with and sometimes without dynamic incentives. The monitored joint liability game without dynamic incentives is referred to as **Group Repeated One Shot Game w/ Monitoring** and the game with dynamic incentives is referred to as **Group Dynamic Game w/ Monitoring** in the data.
+
+
+The seventh and eighth scenarios were the same as the fifth and sixth scenarios, but this time the players were able to communicate with their partner and were seated next to each other. They were still randomly assigned and could see what their partner had played in the last round. They were also liable for their partner's credit if the partner failed to repay their loan. Scenario seven without dynamic incentives is called **Assigned Partner Repeated One Shot Game w/ Communication** in the data. With dynamic incentives, the name is **Assigned Partner Dynamic Game w/ Communication**.
+
+The ninth and tenth scenarios correspond to the seventh and eighth scenarios, but this time the subjects had to choose a partner to play with. Other than that, everything else was the same as in scenarios seven and eight. In the data, the label for this scenario without dynamic incentives is **Elected Partner Repeated One Shot Game w/ Communication** and with dynamic incentives is **Elected Partner Dynamic Game w/ Communication**.
+
+
+
+
+
+Four assumptions were built into the experiment. 
+If you are interested in these, click on the info box
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Assumption theory ")
+```
+
+
+
+## Comparing playestyles of player 459
+
+Before calculating how many times each scenario was played, we will look at a few more scenarios and see what was played by player 459 to get a first impression of what might happen to the choice of risky project if the incentives discussed are introduced for this player.
+Since the players in the experiment could play more than once but were given the same UID, we can see how this player's behavior changes when dynamic incentives are introduced. 
+The game numbered 167 was an individual dynamic game in which player 459 participated. As a reminder, the individual dynamic game was a scenario where a player was only responsible for his own payback and dynamic incentives were active. This means that this is the same scenario we looked at earlier for this player, but this time with dynamic incentives. 
+**Task:**FWe will first reload the data. Just press `edit` and `check`
+```{r "3_1"}
+game <- read.dta("AEJApp20070006gamedata.dta")
+```
+
+Now let’s check if dynamic incentives decreased the risky project choice for this player in this game. We will pull *round* and *project* and order it like we did in the past. 
+**Task:** Use the filter function and select *round* and *project* and arrange by *round*. 
+```{r "3_2"}
+round167<-filter(___, game_num==167, uid==459)%>% select(round,project)%>% arrange(round)
+round167
+
+
+```
+The result shows us that player 459 has played the safe project four times and the risky project once.
+This means that he played the safe project 80% of the time in this season. In the other season without dynamic incentives, he played the safe project and the risky project the same number of times. Thus, one might assume that dynamic incentives increase the choice of the safe project. However, this only involves one player in two scenarios, but we will interpret this conjecture in the next chapter.
+First, let's interpret the result we just computed in a little more detail.
+
+
+Quiz: Do we know already if the risky projects were a success, or do we need to pull the results?
+
+[1]: Yes, we know the results
+[2]: No, we can’t know them yet and have to pull the results
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("three")
+```
+
+It could be that the risky project for player 459 failed and he could not continue because risky was played in the last round by player 459. Let's add the payback to check if the project was a success
+**Task:**Run the code
+```{r "3_3"}
+filter(game, game_num==167, uid==459)%>% select(round,project,repay)%>% arrange(round)
+```
+As we see the risky project was a success.
+
+
+For the next game season we are going to look at, we will analyze the last scenario our player 459 played in. The last scenario the player 459 played in is a “Group Dynamic Game w/ Monitoring” and has the game number 165. 
+
+**Task:** Since we did the R code already just run the code. 
+```{r "3_4"}
+filter(game, game_num==165, uid==459)%>% select(round,project,repay)%>% arrange(round)
+```
+We see that five rounds were played and player 459 chose the risky project twice. 
+We also know that the playing season ended after the fifth round because player 459 chose the safe project and therefore he and his teammate were able to repay the loan even if his teammate had chosen the risky project and failed. To see if the player's choice of the risky project was a success, we need to take the variable "success", which is one if the investment was successful and zero otherwise.
+
+**Task:** Run the code
+```{r "3_5"}
+filter(game, game_num==165, uid==459)%>% select(round,project,success)%>% arrange(round)
+```
+As we can see, the risky project for player 459 was never successful this game season. In this case, the other player had to pay for both. 
+We can also quickly look at the uID of the teammate and what he or she played.
+To do this, we first pull the pairID that all teams received, and then pull the uIDs for the team with the pairID that we received. The uID that is not 459 is then our other player. This time we use the `pull` command.
+
+**Task:** Use the `pull` command to pull the pairid
+```{r "3_6"}
+filter(game, game_num==165, uid ==459)%>%___(pairid)
+
+```
+We see that the pairid is 1928.
+Now we will pull the uID for this pair and see which uid the teammate had. 
+
+**Task:** Enter the `pairid`` we just received
+```{r "3_7"}
+filter(game, game_num==165, pairid ==___)%>%pull(uid)
+
+```
+As we can see, the player with uID 242 was the teammate of player 459 this season.
+Now let's take a look at what player 242 played and compare it with player 459.
+
+**Task:** Run the code
+```{r "3_8"}
+filter(game, game_num==165, uid==242)%>% select(round,project,success)%>% arrange(round)
+```
+The results show that player 165 chose the risky project more often, but also had more luck, playing risky three times and succeeding twice. 
+Let us now return to our player 459 and compare all three scenarios to see which incentives influenced this player.
+To do this, we need to `select` and `arrange` all of player 459's decisions
+
+**Task:** Complete the code chunk
+```{r "3_9"}
+game %>%
+ filter(uid == ___) %>%
+ select(game_num,game_type, round, project, success) %>%
+ arrange(game_type, round)
+
+```
+As we can see, the dynamic incentives reduced the selection rate of the risky project for this player. When group liability contracts are active, the player increased the risky project choice compared to the scenario without these contracts but also with dynamic incentives. This is however still a single player, but it may give us an indication of which incentive increases or decreases the choice of the risky project.
+
+## Number of played games
+
+Now to get an overview and to find out how many times each scenario has been played, we will use the function `summarise` in R, a function included in the package `dplyr`. Inside the summarise function we have to specify from which line we want to have the average, in this case *totalgames*.
+
+**Task:** Complete the code
+```{r "3_10"}
+table1 <- game%>%
+ group_by(game_type)%>%
+ dplyr::summarise(games_played= mean(___,na.rm=TRUE) )
+table1
+
+```
+
+Now the outcome shows how often each of the ten scenario was played. 
+
+In the function `summarise` we can easily add calculations. For example, for each scenario we can calculate how many players participated in a game on average.
+To add this calculation, we first need to filter our data. If we filter by tag_game==1, we will get each game only once.
+
+**Task:** Filter for `tag_game==1``
+```{r "3_11"}
+tagdat<- filter(game, ___)
+
+```
+
+
+
+Now let's add the average players per game to our calculation and rename the output to *average*. For this purpose, we take the filtered data and sum the Players column. Since this column gives the number of players per game. Now we just have to divide this sum by n, where n is the number of games played
+
+**Task:** Run the code to get our table.
+```{r "3_12"}
+average <- tagdat%>%
+  group_by(game_type)%>%
+  dplyr::summarise(players= sum(players),
+                   games_played=n(),
+                   average_players_pergame=players/games_played)
+average
+```
+    
+Now we have a nice table with the number of players who played each scenario, the number of games per scenario, and the average players per game. We see that the minimum a scenario was played is 22 and the most is 36. On average between 16 and 19 players played per game season.
+With this overview of how many people played the games and how many games were played per scenario, we can start analyzing which scenario increased or decreased the choice of the risky project. 
+In the next chapter, we will look at how often the risky project was played and how the payback rate changed for each scenario. 
+
+
+
+
+
+
+## Exercise 3. Results of the experiment
+
+Now that we understand the experiment and have seen some decisions made by one player, we will look at the decisions made by all players. We will find out how many times `risky` was played per scenario as well as the `payback rate` for each scenario.
+
+
+To find these results we will split our data frame into two data frames. One contains all scenarios with dynamic incentives and the other without these incentives. Then we use `summarise` and `full_join` to obtain a table of results. 
+
+**Task:** Load the data "AEJApp20070006gamedata.dta” and call it game
+
+```{r "4_1"}
+game <- read.dta("AEJApp20070006gamedata.dta")
+```
+
+Let's split the dataset into two, one with and one without dynamic incentives, as described above. We could also filter within the `summarise` function. However, in this case it is easier to filter the dataset only once and not four times, as would be the case if we filtered it in the `summarise` function.
+We use the `filter` function as in the last exercise and filter the dummy variable *dynamic*.
+We also remove any round beyond the sixth round to compensate for survivor bias, i.e., a selection bias that would overvalue those who were lucky and `survived` the 50/50% chance of the risky project with dynamic incentives. While the other players who were not lucky would not be as strongly represented.
+It is also wise to eliminate the last rounds, because in the tenth round all players who are not risk averse in games with dynamic incentives should play the risky project, since the dynamic incentives are eliminated since it is the last round. However, this is not the case in reality, as there is no last round.
+
+
+**Task:** Run the Code below:
+
+```{r "4_2"}
+game_without_dynamics <- filter(game, dynamic == 0, round <=6, keep_all=TRUE)
+
+game_with_dynamics <- filter(game, dynamic == 1, round <=6, keep_all=TRUE )
+```
+Now that we have the two data sets, we will first order the data by game type and then use `summarise` to calculate the means and output the standard deviation and standard error. The standard error is the standard deviation divided by the square root of n, where n is the number of observations. We store the results in riskywithout, riskywith, repaywithout and repaywith.
+The following code will do this.
+
+
+**Task:** Run the code
+```{r "4_3"}
+riskywithout<- game_without_dynamics%>%
+group_by(game_type)%>%
+  dplyr::summarise(mean=mean(risky, na.rm=TRUE),
+            sd=sd(risky, na.rm=TRUE),
+            n=n(),
+            se= sd/sqrt(n)
+            )
+
+
+riskywith<- game_with_dynamics%>%
+  group_by(game_type)%>%
+ dplyr:: summarise(mean=mean(risky, na.rm=TRUE),
+            sd=sd(risky, na.rm = TRUE),
+            n=n(),
+            se= sd/sqrt(n))
+
+repaywithout<-game_without_dynamics%>%
+  group_by(game_type)%>%
+ dplyr:: summarise(mean=mean(repay, na.rm=TRUE),
+            sd=sd(repay, na.rm=TRUE),
+            n=n(),
+            se= sd/sqrt(n))
+
+repaywith<- game_with_dynamics%>%
+  group_by(game_type)%>%
+  dplyr::summarise(mean=mean(repay, na.rm= TRUE), 
+            sd=sd(repay, na.rm=TRUE),
+            n=n(),
+            se= sd/sqrt(n))
+riskywithout%>% mutate_at(vars(mean, sd, n, se ), funs(round(.,3)))
+riskywith%>% mutate_at(vars(mean, sd, n, se ), funs(round(.,3)))
+repaywithout%>% mutate_at(vars(mean, sd, n, se ), funs(round(.,3)))
+repaywith%>% mutate_at(vars(mean, sd, n, se ), funs(round(.,3)))
+```
+
+We now have our results and have shown them, but before we analyze them, we will facilitate the interpretation of the results. 
+First, we merge the two data frames and use *risky* and *repay* as headers with the *game_types* as columns.
+
+**Task:** Run the following code once you have implemented the empty code chunks:
+
+```{r "4_4"}
+riskywithout2<- riskywithout%>%
+ select(game_type,mean, se)
+riskywith2 <- riskywith %>%
+ select(game_type,mean, se)
+repaywithout2 <-repaywithout %>%
+ select(game_type,mean, se)
+repaywith2 <- repaywith %>%
+ select(game_type,mean, se)
+
+risky <- full_join(riskywithout2, riskywith2)
+
+repay <- full_join(___, ___)
+
+full <- full_join(x = risky, y= repay, by = "game_type", suffix = c(".risky", ".repay"))
+```
+
+## Plotting experiment results
+
+Now that we have everything prepared, let's present the results. First with a plot for risk and repay and then the *full_join* result as a table, as it is done in the paper. We will use ggplot for this. We do this because sometimes it is easier to understand the results with plots. 
+We will use the ggplot function from the *ggplot2* package.
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("package ggplot2")
+```
+
+**Task:** Install the ggplot2 package
+```{r "4_5"}
+library(ggplot2)
+```
+We will draw a histogram of the mean and add the standard error. 
+**Task:** run the code
+```{r "4_6",fig.width=7.5, fig.height=6}
+plot_risky <-ggplot(risky) +
+  aes(x = mean, y = game_type)+
+  geom_bar(stat="identity", fill= "forestgreen", color="black")+
+  scale_x_continuous(name = "Mean of repayed loans", limits = c(0, 1))+
+  ylab("Game Type")+
+  geom_errorbar(aes(xmin=mean-se, xmax=mean+se), width=.8)
+
+plot_repay <-ggplot(repay) +
+  aes(x = mean, y = game_type)+
+  geom_bar(stat="identity", fill= "forestgreen", color="black")+
+  scale_x_continuous(name = "Mean of repayed loans", limits = c(0, 1))+
+  ylab("Game Type")+
+  geom_errorbar(aes(xmin=mean-se, xmax=mean+se), width=.8)
+```
+As the last part we just need to run “full”, “plot_risky” and “plot_repay” to see the results.
+**Task:** Run `plot_risky`, `plot_repay` and `full`
+```{r "4_7"}
+___
+___
+
+full%>% mutate_at(vars(mean.risky,se.risky, mean.repay,se.repay,), funs(round(.,3)))
+
+
+```
+
+Let us now begin to interpret the results. It can be seen that dynamic incentives (columns 6-10) strongly reduced the decision rate for the risky project. The difference was large in all five scenarios, but the difference diminished with the opportunity for interaction and being able to monitor each other. The repayment rate increased with dynamic incentives and with group liability contracts (the last four rows are with group liability contracts). So far, these results are intuitive. It is also interesting to note that, as theory suggests, players increase risky project choice when they are involved in a group liability contracts. This is because even risk-averse individuals play risky when the other person plays risky. 
+
+In the next chapter, we will run linear regressions and hopefully determine how much the different scenarios and therefore the manipulation in the experiments affect the risky project choice and whether our results are significant. Later, we will also perform other mathematical operations to examine what characteristics of the players affected the outcome.
+
+
+
+## Exercise 4 OLS Regressions
+
+Having completed the data preparation and looked at the results of the experiment, we can now analyze which incentive/manipulation has the strongest effect on the repayment rate and the choice of the risky project and how strong this effect is.  
+This will be done with a linear regression.
+
+## Regression theory
+
+We will be doing OLS regressions, which stands for Ordinary Least Squared Regressions.
+If you do not know what OLS regressions are, or if you are interested in the statistical background of OLS regressions just click oon the info box:
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("OLS regression ")
+```
+
+The OLS estimator is the best linear unbiased estimator (BLUE) if the following assumptions of the OLS estimator holds according to the Gauss-Markov theorem which means that it is linear, efficient and $\hat\beta$ is consistence and unbiased  
+The assumptions for best linear unbiased OLS estimators are 
+
+
+**Assumption 1:** 
+The mean of the disturbance is zero. i.e., $E(u_i )=0$ for 
+every i = 1,2,…,n. We need this assumption to give on average the true values so y can be obtained by the sum of independent variables.
+
+**Assumption 2:** To make every observation equally reliable, the disturbance need to have a constant variance i.e., $var⁡(u_i )=σ_i^2$ for i = 1,2,…,n. 
+
+**Assumption 3:** The disturbance must be independent and can’t be correlated. i.e., $E_((u_i u_j ) )=0$ for j≠ⅈ, i, j, = 1,2,…,n. So one disturbance does not tell us anything about another disturbance.
+
+**Assumption 4:** The explanatory variable X is nonstochastic which means that is fixed in repeated sample and therefore not correlated with the disturbance. 
+Also $\sum\limits_{i=1}^nx_i^2/n\neq0 $ and has a finite limited as n tends to infinity.
+
+**Assumption 5:** All variables are in a linear form and u_i^' s are independent and identically distributed $N(0,σ^2 )$.
+
+**Assumption 6:** Which is only relevant for multiple regression analysis. No perfect multicollinearity. Which means that the explanatory/independent variables are not perfectly correlated with each other.
+
+For proof (Badi Baltagi, 2011 P.51-55, 74)
+
+
+With this knowledge, we can begin running OLS regressions.
+
+## Linear regression `lm`
+
+First, let’s load the dataset once more and filter it to use just the first six rounds.
+
+**Task:** Press `edit` and then `check`
+```{r "5_1"}
+game <- read.dta("AEJApp20070006gamedata.dta")
+
+Round1_6 <- filter(game ,round<=6)
+```
+For the beginning and to get familiar with OLS regressions in R, we will run a simple linear regression with only one independent variable, namely "age", and choose "risk" as the dependent variable.
+To perform a multiple or simple linear regression, R has the function `lm`. In the `lm` function, we must first call the dependent variable and then use a ~ sign to call the independent variables.
+**Task:** Run a linear regression with `risky` as dependant variable and `age` as indipendant variable
+```{r "5_2"}
+testmodel<- lm(___~___, na.rm="true", data = Round1_6)
+summary(testmodel)
+
+```
+`Summary` gives us the intercept, the estimated decrease or increase of the independent variable on the dependent variable and also the p value which is significant in this case.
+We can see that age decreases the rate of picking risky by 0.37% in this study.
+This effect is something we would need to consider if the experiment wouldn’t be randomization within the experiment. Giné et al. wrote in their paper, that the allocation of the participants was random. We will test later if we find any significance that a characteristic like age was overrepresented in a game session but for now, we will assume that there wasn’t an over representation. 
+Since we wanted to test which incentive/manipulation increased the repayment rate and which increases the likelihood that a person would choose the risky project, we need to take as independent variables the different types of incentives/manipulations (dynamics, the ability to communicate, partner choice,...). The dependent variable will be risky in one regression and the pair outcome in another. Since we have five manipulations, we need to run a multiple linear regression, which gives us the option of using more than one independent variable. Giné et al. 2010 created dummy variables for each manipulation so we do not need to do this. If this were not the case, we would do it as shown in chapter one. 
+For our interpretation, here is a summary of which variable stands for which manipulation. Each dummy variable is 1 if the manipulation/incentive was implemented that the dummy variable is associated with, and 0 otherwise. 
+The following dummy variables will be in the multiple linear regression:
+
+**dynamic:** This variable is 1 if the game has dynamic incentives. Also, the games without joint liability contracts are taken into account for this variable.
+
+**jlgame:** This variable is 1 for all games where there were joint liability contracts.
+
+**monitor:** The dummy variable Monitor is 1 if the players had the opportunity to observe what the other player played in the previous round.
+
+**talking:** This variable is 1 if the group members were placed next to each other and could talk.
+
+**ptnrchoice:** This variable is 1 in the case, that players could choose who they wanted to play with in a group. 
+
+The other four variables we will include in the linear regression are all the scenarios above, but only with dynamic incentives being active. The D in front of the name stands for dynamic. I.e. Dmonitor is the same as monitor, but with dynamic incentives. Note that monitor is always 1 if players could observe what their group member played, regardless of whether we have dynamic incentives or not, while Dmonitor is only 1 if monitor is 1 and dynamic incentives are present.
+
+We will talk about manipulations and not scenarios because, for example, jlgame is equal to 1 in the last eight scenarios.
+
+Now that we know all the dummy variables that we will select as independent variables, we will perform a multiple linear regression for the dependent variable *risky*. We will initially use only *risky* as the dependent variable and later in this problem we will also regress *pair outcome*. We will call our multiple linear regression `model`. We will again use the function `lm`.
+
+**Task:** Run the following code:
+```{r "5_3"}
+Model1 <- lm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice, na.rm="True", data=Round1_6)
+summary(Model1)
+```
+R now gives us an estimator for each explanatory variable as well as the intercept. The intercept gives the probability that a player will choose the risky project when we do not consider any manipulation that might increase or decrease the probability. 
+If you look at the formula we wrote, you can see that we also tested for dynamic incentives alone. This is done to see how players respond to dynamic incentives. Testing this variable alone is important because we get the overall dynamic effect. If we don't do this we could only tell how large the effect is for a certain manipulation in the experiment when we use dynamics. To interpret the linear regression, we need to look at the estimators for all scenarios and the dynamics themselves. For example, if the players were able to talk the choice of the risky project increases by 7.33%. However, our data is only significant if the p-value is less than 5% or 0.05. R indicates this to us with a * or for even lower p-values with ** or ***. 
+R also gives us the standard errors and t-values. If we look at the standard error, we see that it is quite large compared to the estimators. For example, the standard error for dynamic incentives is about half the size of the estimator. Standard errors can only be positive because the formula is: 
+$\sqrt{\frac{\sum\limits_{i=1}^n(x_i-\overline x)}{n(n-1)}}$. 
+If we want to compare it with the estimator, we have to ignore the minus of the estimator. For this regression, the R-squared is 0.04, which means that 4% of the variance of *risky* can be explained by our variables.
+
+
+
+
+
+
+
+## Exercise 4.1 Clustered robust standard error 
+
+
+One problem we face when running linear regressions in our case is that players could play in more than one experimental session and that players played the same scenario repeatedly. The problem with this is that an experimental design takes the similarity observed for each individual. To prevent this, one has to implement clustered robust standard errors
+We can cluster the results either by group/session or at the individual level. For example, if we were comparing school classes in an experiment with different learning methods, it would be prudent to build a clustered robust standard error for the entire class, since one teacher might be better than the other and therefore the entire class might be better, and we would misinterpret the implications of our results. In the work we studied, the experimental groups were randomized, so there should be no experimental session effects. Therefore, we need to cluster the standard errors at the individual level if there are clusters. For more information on how to decide at which level clustering should be applied, see the paper "Clustering standard errors at the "session" level from Duk Kim (2020)".
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Clustered Robust Standard Error")
+```
+
+
+## Viewing residuals of game 162
+
+
+
+Let's find out if there are clusters at the individual level. 
+To do this, we will look at game season 162. This was the game season in which the `Individual Repeated One Shot Game` scenario was played. We will look at this game because there was no group lending contract and no dynamic incentive. Therefore, each player's decision is not influenced by these incentives, and we can easily determine whether a player is risk averse or risk neutral or risk seeking. As we showed in the first chapter, a risk neutral or risk seeking person would choose the risky project in this scenario. 
+To determine if we have clusters, we need to look at the residuals and see if the residuals are randomly distributed around the mean of zero or if groups, or in our case individuals, tend to choose similarly each time (if assumption 3 for a BLUE estimator is violated). 
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Residuals")
+```
+
+
+Let us now calculate the residuals. First, we need to reload the data and filter it to show only rounds 1-6 to eliminate any possible survivor bias. We also filter by game season 162. 
+Since we've already done this a few times, just press `edit` and then `check``
+
+```{r "6_1"}
+game <- read.dta("AEJApp20070006gamedata.dta")
+
+Round1_6_162<- filter(game, game_num==162,round<=6)
+```
+Let’s run a linear regression where we regress the risky project choice on the round. 
+
+**Task:** Run the code
+```{r "6_2"}
+Reg1<- lm(risky~round,  data=Round1_6_162,na.action = "na.exclude")
+```
+If you want to obtain residuals for a regression, na.exclude should be applied, otherwise the set of residuals will not match the set of observations if NAs are present, since the default setting in R is na.omit. However, in our case, there are no NAs because all players were able to play all rounds due to this scenario (no dynamic incentives).    
+
+In R, we can calculate the residuals using the `residuals` command. Now let's add the residuals to our data frame and use the summary function on the residuals to get 
+
+**Task:** Run the code
+```{r "6_3"}
+Round1_6_162$residuals<-___(Reg1)
+summary(residuals(Reg1))
+
+```
+Since *risky* is a dummy variable that can only take the values 0 or 1, the residuals can only take the values 1> u >-1. As we can see, the minimum value is -0.67 and the maximum value is 0.40, which is within this range. Also, the mean of the residuals must always be zero if our linear regression is the "best fit," which is the case here.
+Since we can't tell much about the distribution of the residuals, we will plot the residuals and then interpret the results we see. We will use the plot function to display the residuals. Since we want to see if the players influence themselves by past decisions, we take the "uid" as the y-graph and the residuals as the x-graph.
+
+**Task:** Run the code  
+```{r "6_4"}
+plot(Round1_6_162$uid,Round1_6_162$residuals, col = factor(Round1_6_162$uid) ,pch=19,
+     ylab="Residuals", xlab="Uid")
+abline(h=0,col="purple")
+```
+Let's interpret and understand the plot. Each point is a decision made by one player in one round. Since we filtered for six rounds, there are six decisions for each player. If the residual is positive, the player has chosen the risky project, if it is negative, the safe project. The x-axis shows us the uIDs of the players. If we had no clusters, the residuals of each player would be distributed around 0, which is the case for player 212, for example. But most players choose a tactic, either the `all safe` one like player 29 or the `all risky`` one like player 428. So we see that the decisions of the players on the player level are not independent but influence each other. 
+Now, one might think that this is only the case in this scenario, but are there also clusters in the uIDs when players play in different scenarios?
+
+## Residuals of individual players
+
+Let's make an example with three uIDs. These three players all played in game 162, which we just analyzed, but also in other scenarios. The players we're looking at are player 125, player 212, and player 428. Player 125 is the gray player in our chart from earlier who played the safe project five times. Player 212 has been colored green and has played the risky project three times and the safe project three times. Player 428 is colored black and has played the risky project six times. 
+Now, to get the residuals of these three players, we filter the game dataset with these uids and remove each round after round 6. Then we do the same as before with game 162. Let's call the new dataset uIDs
+
+**Task:** Complete the code.
+```{r "6_5"}
+uIDs<- filter(game, uid==c(125,212,428) ,round<=6)
+
+
+Reg1<- lm(risky~round,  data=uIDs,na.action = "na.exclude")
+uIDs$residuals<-residuals(Reg1)
+
+plot(uIDs$uid,uIDs$___, col = factor(uIDs$uid) ,pch=19,
+    ylab="Residuals", xlab="uID")
+abline(h=0,col="purple")
+
+```
+
+
+
+Quiz: Did we also find clusters in the uIDs when players played in different scenarios?
+
+[1]: Yes
+[2]: No
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("four")
+```
+
+
+
+
+
+
+We see for all players that they are influenced by themselves when we look at the residuals.
+Therefore, we need to implement clustered robust standard errors at the individual level. For further explanation, see the paper by Duk Kim (2021), where this habit is explained in more detail. 
+
+## Implementation of clustered robust standard errors
+
+
+There are a few ways to implement clustered robust standard errors. In my opinion, the simplest and most consistent way to do this is to use the `felm` function from the `lfe` package. We will use this function later as well, so we don't need to understand any other syntax were we can use `felm`.
+`Felm` stands for Fixed Effect Linear Model.
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Lfe with the felm function")
+```
+
+Let's load the package and filter the data again so that only rounds 1-6 are shown, and call it Round1_6.
+
+**Task:** Run the code
+```{r "6_6"}
+library(lfe)
+Round1_6 <- filter(game ,round<=6)
+```
+Let us now run the regression from chapter four with clustered robust standard errors to see what changes.
+We call our regression reg_clust and implement the robust standard errors at the player level. Otherwise, we keep the formula as for the linear regression in chapter four.
+
+**Task:** Run the code
+```{r "6_7"}
+reg_clust = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | 0 | 0 | uid, data=Round1_6)
+```
+
+Now let's look at what has changed from the old model. Run an `lm` regression with the same variables we just used
+
+**Task:** Complete the code
+```{r "6_8"}
+model1 <- lm(___ ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice, na.rm="True", data=Round1_6)
+
+```
+To compare both models, we will use the "stargazer" package. With this package we can put the regressions nicely side by side to facilitate a comparison.
+
+## Presenting results with stargazer
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Stargazer")
+```
+
+**Task:** Load the package
+```{r "6_9"}
+library(stargazer)
+```
+Now just run the code below to compare both models
+```{r "6_10",results='asis'}
+stargazer(model1, reg_clust, type = "html") 
+```
+
+The clustered robust standard errors do not change the coefficients. But as the name of the statistical procedure we used suggests, the standard error has changed. The P values have also changed, with Dtalking no longer significant. If we had not performed this statistical procedure, we would have misinterpreted this variable.
+In addition, our standard errors increased for all cases, showing us that the standard errors were correlated at the individual level without clustered robust standard errors.
+Now that we have run the clustered robust standard errors, we only need to do one more thing to get our final regressions. Namely we will implement fixed effects to include learning and time-invariant variables. Then we can analyze which manipulations reduced or increased risky project choice or the repayment rates.
+
+
+## Exercise 4.2 Fixed Effects
+
+Bias due to time-invariant characteristics or subjects learning as they play multiple rounds can be negated with fixed effects. However, the learning aspect might be something we want to keep in the calculation, since people in the real world would also learn after having a few microcredits and might adapt as well.
+
+## Round effect
+
+Before we start with the fixed effects issue, we want to see if rounds, and thus learning, have an impact on the results. We run a regression with `risky` as the dependent variable and `round` as the independent variable for all games played to see if the variable `round` affects the choice of risky project. We load, store, and filter the data, then run the regression and use the summary function to display the regression results. Since we have done this in the past, just click **Edit** and **check**.
+
+```{r "7_1"}
+game <- read.dta("AEJApp20070006gamedata.dta")
+
+Round1_6<- filter(game,round<=6)
+
+reg1<- lm(risky~round, data=Round1_6)
+summary(reg1)
+```
+As we can see, we get a significant result in that each round played increases the probability of playing risky by 2.6 percent. Let's now take a look at how many rounds were played per game season to see if this effect affects a large portion of our results.  We will use the filtered dataset because we only ever analyze the first six rounds to rule out survivor bias, as described in chapter three. To count the occurrences in a column, we can use the `table` function.
+**Task:** Use the `table` function on "Round1_6$round"
+```{r "7_2"}
+___(Round1_6$round)
+
+```
+We see that 5045 times the first and second rounds were played and the possibility that the experiment would end reduced the number of those who played a third or later round. But the probability of the playing season ending was so low that 56.8% of the playing seasons reached at least the sixth round and 83.1% reached at least the fifth round. 
+With this high number of game seasons that lasted five or more rounds, round effects will affect our results. We will use fixed effects to control for this effect.
+In addition, we can use fixed effects to control for time-invariant
+participant characteristics. To this end, we will apply fixed effects to the uID. We begin by removing the effect of time-invariant player characteristics to achieve better comparability with the regressions in Chapters 4 and 4.1. Since players can also play in more than one season, the use of fixed effects on the uID is even more important. 
+
+## Implementing fixed effects
+
+To show fixed effects compared to `lm`, we will use more than one game season and therefore run the regression with risky as the dependent variable and round as the independent variable for all game seasons, as we did for the `lm regression` above. To add fixed effects to a regression, we could either create a dummy variable for each uID, which is quite memory intensive, or use an R package that computes fixed effects. The function `feols` from the package `fixest` is the most efficient, i.e., the one that requires the least computational power. Unfortunately, `feols` is not usable with `stargazer`, so we will use the function `felm` from the `lfe package`. Since we don't have an extremely large dataset, we won't have any problems with this function. Also, we have used `felm` before and know how the syntax works. However, if you ever have problems with processing power, you should try the `feols` function.
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Fixed effects")
+```
+
+To now run fixed effect regressions without clustered robust standard errors we need to remove the | 0 | 0 part from the felm formular. 
+
+**Task:** Run the regression with Fixed effects and then compare both regressions using `stargazer`.
+```{r "7_3",results='asis'}
+reg_fix<-felm(risky ~ round | uid, data= Round1_6)
+stargazer(reg1, reg_fix, type="html", out= "Round Effects.html",
+          add.lines =list(c("Fixed Effects", rep(c("No","Yes")))))
+```
+As we can see, the constant of the fixed effect model has disappeared, which we will discuss later in this chapter. The most important change is that the round effect has changed from 0.026 to 0.029, which means that the effect has increased because the bias or influence of time-invariant
+participant characteristics has disappeared. The R² has also increased. The standard error as well as the significance have remained the same. 
+
+## Comparing lm, clustered robust standard errors and fixed effects
+
+Now let's also run a regression where we add clustered robust standard errors on the *uID* to our output to see what changes then. We will run a regression with clustered robust standard errors only and a regression with clustered robust standard errors and fixed effects. If we want to add both clustered robust standard errors and fixed effects, we need to use the formular form from Chapter 4.1, but this time without the first 0 in the formula, since this 0 is where fixed effects are implemented. After that we will show the output with stargazer.
+
+**Task:** Run the code to compare the regressions
+```{r "7_4",results='asis'}
+reg_clust = felm(risky ~ round | 0 | 0 | uid ,data=Round1_6)
+
+reg_fix_clust<- felm(risky ~ round | uid | 0 | uid ,data=Round1_6)
+
+
+stargazer(reg1, reg_fix, reg_clust, reg_fix_clust,  type="html", out= "Round Effects2.html",
+          column.labels = c("OLS", "FE", "Clustered", "FE + Clustered"), add.lines = list(c("Fixed effects", "No", "Yes","No","Yes"),c("Clustered robust standard error", "No", "No","Yes","Yes")))
+```
+The clustered robust standard errors increased the standard errors in our example because they account for the individual clusters. The P-values in this regression have not changed. Now that we know how fixed effects work and what their effects are, we can move on to the regression we want to run, namely how the modifications within the experiment affect the choice of risk project and the repayment rate. However, as described above, we should not use fixed effects if we do not want to factor out learning and characteristics. We will interpret the fixed effects results to obtain a pure result for which modifications of the experiment changed the risk project choice or repayment rate.
+
+## Regressing `risky`  
+
+Let's now run the regressions we are interested in. We will simply adapt the code from above with fixed effects and clustered robust standard errors, as well as the code with only clustered robust standard errors. We will use fixed effects for `round` and `uid` because we know that round affects our result, and we want to control for time-invariant subject characteristics. We will also use clustered robust standard errors because we know that standard errors are correlated at the individual level. Let us now use **risky** as the dependent variable and the **manipulations of the experiment** as independent, as we did in Chapter 4.1. 
+
+**Task** Implement fixed effects for `round` and `uid`
+```{r "7_5"}
+reg_fix = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | ___+___ | 0 | uid, data=Round1_6)
+
+```
+Let's compare the model with and without fixed effects using stargazer.
+
+**Task:**Run the code:
+
+```{r "7_6",results='asis'}
+reg_clust = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | 0 | 0 | uid, data=Round1_6)
+
+
+stargazer(reg_clust, reg_fix, type = "html", column.labels = c("Onyl clustered", "Clustered and fixed effects"))
+```
+We see that all of our results have changed. As written above, you have to decide which data to analyze, but we'll stick with the ones that have fixed effects. We will interpret the results once we have all the regressions on *risky*. Another big difference is the absence of the intercept. This is because the intercept is free to vary for individuals or groups if we use fixed effects. In the paper, an intercept is given because Stata calculates the average of the fixed effects. In R, this is a bit more complicated. Since the calculation is of no real use, it will not be part of the normal tasks. However, I will do the calculation in the **notebox** and show how it is done. Just **click on the note** if you are interested. Also note that the intercept in R is slightly different from the Stata output, since we get the mean intercept for each fixed effect we implemented. 
+
+#! start_note "Determinating the mean intercept for fe"
+
+We will use `fixest` for computing the intercepts. `Felm` calculates clustered robust standard errors in the formular which `fixest` doesn't. However to get the intercept in a fe model fixest should be used.
+**Task:** Run the code below
+```{r "7_7"}
+library(fixest)
+
+fefixest<- feols(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice| round+uid, data = Round1_6)
+summary(fefixest, cluster=("uid"))
+```
+As you can see, the syntax is about the same as the `felm` function, but we have to include clustered robust stnadard errors in the summary function, which means a bit more work. But of course the results are the same, because we just used a different method.  
+
+With the `fixef` command we can now easily get the intercepts of the fixed effects.
+**Task:** Run the code
+```{r "7_8"}
+fixedEffects = fixef(fefixest)
+summary(fixedEffects )
+```
+Now we have our intercepts. However as said above the interpretation is not useful and the mean is almost completely useless. We can just get a reference point with it. 
+With the commands 
+**“fixedEffects$uid”** or **“fixedEffects$round”** we can look at the effect for every uid/Round.
+
+
+#! end_note
+
+Now that we have computed fixed effects and clustered robust standard errors, we can compute and present our final models to determine which scenario increases or decreases the risky project choice or the repayment rate. 
+
+
+## Calculating the final model for `risky`
+
+We will first run the `risky project choice` model and then the `repayment rate` model.
+We will run both models with and without fixed effects. All regressions will be run with clustered robust standard errors at the uID level and computed using the felm function.
+Since we have already computed the fe model and the clustered-only model for risky without using `subset` above, we do not need to compute them again. In the past exercises, we filtered our data and then used that data in our regression. We have also done this for our Round1_6 data set, as we will always use this data set for our regressions. Now, if we want to filter by dynamics, we could create an additional data frame with the filtered data or filter in the regression. Since we won't be running as many regressions with the specific command that dynamic == 0 or 1, we will use subset for dynamic incentives. 
+Let's run our first regressions:
+
+**Task:** Run two regressions without fixed effects but with clustered robust standard errors. One regression should be with dynamic incentives and one without. Use the `subset` function to use on dynamics or no dynamics.
+
+```{r "7_9"}
+reg_clust_dyn = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | ___ | 0 | uid, data=subset(Round1_6, Round1_6$dynamic==1))
+
+reg_clust_nodyn = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | 0 | 0 | uid, data=subset(Round1_6, Round1_6$___))
+
+```
+
+Now let’s compute the same with fixed effects on round and uid.
+
+**Task:** Fill in the empty chunks and press check
+
+```{r "7_10"}
+ reg_fix_dyn =felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice |___ | 0 | uid, data=subset(Round1_6, Round1_6$dynamic==1))
+
+reg_fix_nodyn <- felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=subset(Round1_6, Round1_6$___))
+```
+We now calculated six regressions. Let’s put them now into stargazer and compare them to each other:
+
+**Task:** Run the code
+```{r "7_11",results='asis'}
+stargazer(reg_clust, reg_fix, reg_clust_nodyn, reg_fix_nodyn, reg_clust_dyn, reg_fix_dyn, type="html", out= "Risky.html",column.labels = c("All games clustered", "All game FE", "No dyn clustered", "No dyn FE", "Dyn clustered", "Dyn FE"))
+```
+
+
+
+Quiz: Do we see an significant increase or decrease of the risky project choice if communication is established
+
+[1]: Yes
+[2]: No
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("five")
+```
+
+First, it is noticeable that the dynamic coefficient, as well as all coefficients preceded by D, disappear when we set a value of one or zero for dynamic. If the dynamic is set to zero, it is obvious that we will not get any result for these manipulations, since they will always have a zero in the data frame. When dynamics equals one, the effect of dynamics cannot be computed because there are dynamic incentives in each observation and therefore we cannot compute an effect of dynamics on the dependent variable. The only coefficients that can be computed are *Djlgame*, *Dmonitor*, *Dtalking*, and *Dptnrchoice* when the dynamic incentives are one. However, they are already calculated using *jlgame*, *monitor*, *talking*, and *ptnrchoice*. If we were to run our regression with *djlgame*, *dmonitor*,... as the only independent variables, we would get exactly the same results as with *jlgame*, *monitor*,.... Now, in this case, R and Stata do not display the same results twice, so we also have empty results in the coefficients *Djlgame*, *Dmonitor*,... if the dynamics is equal to one.
+
+
+As we can see, overall, the introduction of dynamic incentives reduced the decision to choose the risky project by 21.5%. This effect is significant. We also see that the choice of risky project increases by 7% in group liability contracts if we have dynamic incentives. This is consistent with the theory and results we discussed earlier in this problem set. Partner choice with dynamic incentives reduces the proportion of the risky project but only on the <10% significance. According to the theory, this effect could occur because risk-averse players try to partner with other risk-averse players. When they team up with a risk-averse player, their utility-maximizing play is that they both play the safe project. When paired with a risk-seeking player, they are forced to play the risky project to maximize their utility if the other person plays risky. Risk-averse players prefer the `both-safe` outcome to the `both risky` outcome. The outcome where they play safe and the other plays risky is, according to the theory, the worst for their utility. We can also see that the ability to communicate with the playing partner increases the choice of the risky project in all cases. This could be because players collectively commit to playing risky without fear of disappointing their group member. However, this is only a conjecture for now. We will examine this behavior in chapter six.
+
+## Calculating final model for `repay`
+
+Now let's do the same with repay as the dependent variable. Since you've already done these steps a few times, just run the code to get the table. We'll call the regressions the same, just with a two after them so it's easier to compare which regression was which.
+**Task:** Run the code
+
+```{r "7_12",results='asis'}
+reg_clust2 = felm(repay ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | 0 | 0 | uid, data=Round1_6)
+
+reg_clust_dyn2 = felm(repay ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | 0 | 0 | uid, data=subset(Round1_6, Round1_6$dynamic==1))
+
+reg_clust_nodyn2 = felm(repay ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | 0 | 0 | uid, data=subset(Round1_6, Round1_6$dynamic==0))
+
+reg_fix2 = felm(repay ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=Round1_6)
+
+reg_fix_dyn2 =felm(repay ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=subset(Round1_6, Round1_6$dynamic==1))
+
+reg_fix_nodyn2 <- felm(repay ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=subset(Round1_6, Round1_6$dynamic==0))
+
+
+stargazer(reg_clust2, reg_fix2, reg_clust_nodyn2, reg_fix_nodyn2, reg_clust_dyn2, reg_fix_dyn2, type="html", out= "Repay.html",column.labels = c("All games clustered", "All games FE", "No dyn clustered", "No dyn FE", "Dyn clustered", "Dyn FE")) 
+```
+We have now only exchanged the dependent variables and the names, but the rest has remained the same. It turns out that dynamic incentives increase the repayment rate by 12.3% when fixed effects are taken into account. It is logical that the repayment rate increases when the proportion of risky projects is lower. Joint liability contracts with dynamic incentives decrease the repayment rate by 6.7%, which is also logical because they increase the probability of choosing the risky project. The repayment rate increases significantly by 20.2% when dynamic incentives are not used and group liability contracts are active.
+Individual default costs decrease when joint liability contracts are in place. This is because the group as a whole has to repay the loan and the probability of not being able to play another round decreases for the player who chooses the risky project.  
+Overall, the repayment rates increase due to the insurance effect. The insurance effect in this case is that if one player fails to repay the loan, the other must pay for both. When there are no dynamic incentives, the repayment rate decreases due to communication.
+
+
+## Calculating if proband characteristc change risky behavior
+
+
+In the next step, we will calculate how the subjects characteristics affect the probability of choosing the risky project. We do not suspect that our groups were not randomly assigned, although we will test this in the next section. Assuming that participants were randomly assigned and that the characteristics of these participants are balanced between treatments, we can draw causal conclusions. In the real world, however, there might be an overrepresentation of characteristics among microcredit clients, so it is interesting to see whether certain characteristics reduce or increase the likelihood of making a risky decision. To test for these characteristics, we run another fixed effect regression. We test for the dummy variables *female*, *younger*, *older*, *secondary*, *gss2pos*, and *saves_bank*. Once again, the authors have done us the favor of already creating dummy variables for all of these characteristics. 
+
+These dummy variables stand for: 
+
+**female** is 1 if the person was a female and 0 if the person was a male
+
+**younger** is 1 if the persons age is 22 years or below
+
+**older** is 1 if the persons age is 35 or above
+
+**secondary** is 1 if the subject has completed the secondary school
+
+**gss2pos** All participants had to answer three questions about themselves taken from the general social survey. These questions can predict to some degree whether a person is trustworthy or not (Karlan 2005). If at least two of these questions are answered yes, the person has a 1 in the data for this variable and 0 if only one or zero questions were answered yes.
+
+**saves_bank** is 1 if the person has a saving account in a bank
+
+
+For reference, we will also include the "reg_fix" in our Stargazer output, since we did not subset for any characteristic here. We will refer to the regressions as "reg_fix_characteristics", where "characteristics" is the characteristic we want to test. To run this regression, we need to subset the data frame where the characteristic equals one.
+
+**Task** Since we allready did this just run the code
+
+```{r "7_13",results='asis'}
+reg_fix = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=Round1_6)
+reg_fix_female = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data= subset(Round1_6, Round1_6$female==1))
+
+reg_fix_younger = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=subset(Round1_6, Round1_6$younger==1))
+
+reg_fix_older = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=subset(Round1_6, Round1_6$older==1))
+
+reg_fix_secondary = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=subset(Round1_6, Round1_6$secondary==1))
+
+reg_fix_gss2pos = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=subset(Round1_6, Round1_6$gss2pos==1))
+
+reg_fix_saves = felm(risky ~ dynamic+ jlgame+ monitor+ talking+ ptnrchoice+ Djlgame+ Dmonitor+ Dtalking+ Dptnrchoice | round+uid | 0 | uid, data=subset(Round1_6, Round1_6$saves_bank==1))
+
+stargazer(reg_fix, reg_fix_female, reg_fix_younger, reg_fix_older, reg_fix_secondary, reg_fix_gss2pos,reg_fix_saves, type="html", out= "Characteristics.html",
+          column.labels = c("All subjects", "Female", "Younger", "Older", "Sceondary", "GSS answer","Saves"))
+```
+We have now computed an output that shows us how the scenarios affect the selection of the risky project for individual characteristics. We used fixed effects and clustered robust standard errors for all regressions. The sign patterns did not change significantly by any demographic characteristic no matter which manipulation.
+It is interesting to note that younger players are more affected by the dynamic incentives than older individuals. However, older people tend to play the safer project more often, as we have already seen, so younger people might still be more risk seeking than older people even with dynamic incentives. We also see that educated, trustworthy, and people with a savings account play safer than people without these characteristics when dynamic incentives are introduced. However we cannot find large differences in these demographic characteristics in our data. Women are more reliable customers and tend to repay their loans more often in the real world (Beatriz Armendáriz de Aghion and Jonathan Morduch 2005), but we could not find a large difference for gender in our data.
+With this last table, we are done with the OLS regressions and will move on to the next task, where we will test whether the players who played in the experiment represent a cross-section of people who demand microcredits. Later, we will also test whether individuals were randomized within the experiment. We do this to test whether we can generalize our experimental results to the real world.
+
+
+
+
+
+
+## Exercise 5. Data comparison
+
+
+
+Now that we understand the design of the experiment and how the manipulations affected the players decisions, let us examine whether the individuals who participated in the game are the same as those who would normally take a microcredit. To do this, *Giné et al.* created a dataset on the characteristics of some participants in the experiment and collected data on the characteristics of a random sample of individuals who were also in the market where the recruitment process took place.
+
+In order to verify that we have a representative sample, we need to load another **data** showing both `participant` and `non-participant` characteristics.
+The data set is called “AEJApp20070006censusdata.dta”
+
+**Task:** Please load this data and call it Census_data
+```{r "8_1"}
+ Census_data <- read.dta("AEJApp20070006censusdata.dta")
+```
+
+
+In the next step we will filter the data into two groups. One group is the people who participated in the experiment, the second one is the people who did not participate. The data already contains many dummy variables that will help us to select the right characteristics. We will use the `filter ()` command from the `dplyr package` we used earlier.
+We will name the group that participated in the experiment **playedgames** and the group that did not participate **playednogames**. The group where the dummy variable `played_games` is one is the group that played games, and the variable is zero for the group that did not participate in the experiment.
+
+**Task:** Run the following code.
+```{r "8_2"}
+playedgames <- filter(Census_data, played_games == 1)
+playednogames <- filter (Census_data, played_games == 0) 
+```
+
+Giné et al. were able to obtain only 323 characteristic data from the 493 people who participated in their experiment.
+Since we have 47 variables in this data frame, we need to select those that we want to compare and that are important to us. To interpret the results, we need to understand what each characteristic means. This is intuitively easy for the characteristic "age", but much more difficult for "kerosene". In chapter 4.2 we have already presented some characteristics, but since these are only a few, here is a list of all the elements we will choose and their interpretation:
+
+
+
+**female:** Female is a dummy variable. In the data frame is a 1 if the person is a female and 0 if the person is male. 
+
+**age:** This variable is equal to the age of the person.
+
+**married:** Is  a dummy variable which is 1 if the person is married.  Marriage can be an indicator for risk averse behavior (Browne, Jaeger, Richter and Steinorth 2022). 
+
+**education:** Education shows how many years the people where in school.
+
+**assets:*** This variable shows how many assets a person is owning. The fewer the poorer the person is on average.
+
+**kerosene:** Kerosene means that the person cooks with kerosene and not on an electric stove which is an indicator of poverty.
+
+**gambling:** Gambling means that a person played lotto or in the casino in the last month. This variable is also a dummy variable. People who go to the casino or in the lottery may be more risk seeking.
+
+**owner:** This variable is also a dummy variable which tells us if the person has a microenterprice.
+
+**hours:** Hours is the average time a person works in one week.
+
+**saves bank** Is 1 if the person has a bank account.
+
+**Past_rosca:** This variable is 1 if the person has joined a Rosca in the past. Roscas are self-selected, voluntarily formed groups into which each member pays a predetermined amount each period to form a fund. This fund is then used to give money to the members of that group to invest. Once a person is selected, that person cannot be selected again, but must still pay the pre-determined amount for each period, and the Rosca system continues until each person has received money. The person who is granted the money in a period is usually selected randomly. For more information about Rosca, see the paper from Samapti and Gautam (2005). 
+
+**grouploan:** This variable means that the person already participated in a joint liability contract.
+
+
+**borrower:** This variable is a dummy variable which takes 1 if the person received a loan in the past year. 
+
+
+**riskpref6** This variable is 1 if a person played risk seeking in a hypothetical lottery.
+
+**riskaverse** If a person is risk averse in a hypothetical lottery this variable is 1
+
+
+
+Let's now run the code below to select the variables we just discussed and load them as **average_playedgames** for the characteristics of the people who played the experiment and as **average_playednogames** for those who did not.
+
+
+```{r "8_3"}
+
+average_playedgames <- colMeans(___[ , c("female", "age", "married", "education", 
+                                                 "assets", "kerosene", "gambling", 
+                                                "owner", "hours", "saves_bank", "past_rosca",
+                                                "grouploan", "borrower",  "riskpref6","riskaverse"
+                                               )], na.rm="true")
+
+average_playedgames
+average_playednogames <- colMeans(playednogames[ , c("female", "age", "married", "education", 
+                                                   "assets", "kerosene", "gambling",  
+                                                  "owner", "hours", "saves_bank", "past_rosca",
+                                                  "grouploan", "borrower", "riskpref6","riskaverse")], na.rm="true")
+average_playednogames
+
+```
+
+We could just look at each point and compare it to the same point from the other group. To make the comparison easier, we will place the datasets side by side using rbind, as we have done in the past.
+
+**Task:** Run the following code:
+```{r "8_4"}
+average <- rbind(average_playednogames, average_playedgames)
+round(average,2)
+```
+We can see that the mean values of the individual characteristics we selected are now side by side.
+
+For example, if we take a look at "age", we see that the subjects who did not participate in the experiment were on average 28.5 years old and those who played the game were on average 34.4 years old.
+The results show that 57% of the subjects were female. 
+Now looking at the results, we see that the average person who participated in the experiment is older, poorer, has more experience with credit, and is more likely to be a business owner than the other group of people who did not participate in the experiment. We also see that both groups work more than 60 hours per week, which is quite a high number compared to Western countries.
+This means that the characteristic data of our group that participated in the experiment are not representative in their characteristics compared to the people who did not participate in the experiment. This would be a problem if we did not use fixed effects and if the experiment was not randomized within the experiment, which we will test in the next chapter.
+However, the subjects did not differ from the average person in their risk taking behaviour. In a hypothetical lottery designed to calibrate risk taking or risk aversion, both groups responded very similarly, as we see from the variables riskypref6 and riskaverse.
+In the next step, we will test whether subjects were randomized within the experiment. 
+
+
+
+
+
+
+
+
+
+## Exercise 5.1 Checking for randomized experiment.
+
+Checking randomization within an experiment is important because we need to check whether the characteristics are balanced across treatments. Giné et al. wrote that they randomized the experiment. We now want to check whether a characteristic of the subjects that could affect the outcome is overrepresented in a scenario. These calculations are not in the paper, but they are important because they may bias our results. 
+For example, if there are only married or old people in a group, that group might play safer no matter which experimental group they are in. This is due to their personal characteristics and not to the experimental conditions. Therefore, we need to examine whether the characteristics were counterbalanced in the different treatments. If we do not do this, we might get a biased explanatory variable and therefore would not be able to interpret the results corret and our advice that increases the repayment rate may be incorrect.
+
+Since we have ten scenarios in which a player could have played, we need to check all the important characteristics of the players that could affect the outcome. We will test some characteristics that we analyzed in Chapter 5 Data Overview. The characteristics we will test are: "female", "age", "married", "education", "assets", 
+                            "riskpref6", "owner".
+## Setting up the data
+
+First, we need to load our data. This time the Game data. 
+
+**Task:** Load the Data "AEJApp20070006gamedata.dta" and call the data frame “game”
+
+```{r "9_1"}
+game <- read.dta("AEJApp20070006gamedata.dta")
+```
+Now we need to make sure that the characteristics of each player are only considered once, so that there is no overrepresentation. The data frame we just loaded contains one row for each player for each round played in any given experiment. If we just took the mean of the probands, some players would be counted ten or more times, while others would only be counted a few times because they didn't play that many rounds in that many games. Each player has a unique "uID" that is included in the data. We will now filter the data so that only the first round is considered, meaning each person is only considered once per game season. Round one was played with a probability of 100% and thus every player in a scenario has played that round, which means we have nicely filtered data to compare the characteristics for all game types.
+
+**Task:** Run the code.
+```{r "9_2"}
+round1<- filter(game,round==1) 
+```
+With the data prepared we can start checking if the means of the groups differ significantly or not.
+
+## Welch’s two sample t-test
+
+
+To test the differences between the means of two groups, there are some tests. The test that is most appropriate for our problem is Welch's two-sample t-test. Normally, a t-test assumes a normal distribution and equal variances.
+However, Welch's two-sample t-test is robust to deviations from the normal distribution when n1 and n2 are both greater than 10 and ¼ < n1/n2 < 4 (Lothar Sachs, 1993, p. 76), which is the case here for all scenarios, and it is reliable even when we have different sample sizes and different variances of the samples. Welch's two-sample t-test should also be used most of the time when means of two groups are to be compared instead of other tests (Rasch, Kubinger, Moder, 2011, pp. 219-231) For more information on the mathematics of Welch's two-sample t-test, click on the info box.
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Welch�s two sample t-test")
+```
+
+
+
+The important thing for us is that if we reject the H0, we have a significant difference in the means of one variable of the groups.
+Let's do an example. Let's test whether the mean age in the `Individual Repeated One Shot Game` group is significantly different from the mean age in the group `Group Repeated One Shot Game w/ Monitoring`.
+We will use the `pull` command from the `dplyr` package to pull the *age* from the data for these two scenarios. We will store the pulled data in *t_testdat1* and *t_testdat2*. We will then perform the t-test
+**Task:** Run the following code:
+```{r "9_3"}
+t_testdat1  <- filter(round1, game_type == "Individual Repeated One Shot Game")%>%pull(age)
+t_testdat2 <- filter(round1, game_type=="Group Repeated One Shot Game w/ Monitoring")%>%pull(age)
+
+t.test(t_testdat1 ,t_testdat2)
+```
+R provides us with the results of the test statistic, the degrees of freedom and, most importantly, the p-value. In this case, the p-value is 0.74, which means that we cannot reject the null hypothesis. So we cannot say that there is a significant difference between these groups. 
+However, we now have the problem that we would have to do many t-tests because we have ten groups and seven characteristics that we would have to test. If we run multiple t-tests, we have the problem that we are only testing at the 5% confidence interval, which means that the more tests we run, the more tests will give a random false result (type 1 error). Fortunately, there is a test called analysis of variance or ANOVA that helps us reduce the probability of type 1 errors when we compare more than two groups. 
+
+## ANOVA
+
+To obtain the most robust results, an ANOVA should have a normal distribution of the population, and these distributions should have the same variance. 
+However, like Welch's two-sample t-test, ANOVA is also robust to non-normal distribution and has higher power than other tests for samples with more than three groups (Schmider, Ziegler, Danay, Beyer, Bühner, 2010). However, ANOVA assumes equal variances, which is not the case with Welch's T-test. Our binary data do not have the same variance distribution. However if we want to compare means and use binary variables and our relative frequencies of y are between 0.25 and 0.75, we can still use ANOVA and get solid results (Luepsen 2018, page 23). Luckily this is the case here.
+ANOVA can compare more than two groups. Since we have ten groups (each scenario is one group in this case), ANOVA is the tool of choice for us in this case. We have one independent variable, which is the group in which the players played, which means we are running a one-way ANOVA. The disadvantage of an ANOVA is that if we find a significant difference, we cannot directly say between which specific groups the difference was found, and have to compute other tests to find out where the difference lies. We can only say, for example, that age is significantly different between scenarios, but we cannot say between which specific scenarios. However, we will take this into account if we find significant differences.  
+
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("ANOVA")
+```
+
+
+There are some functions to calculate an ANOVA in R. We will use the function anova(lm(…))to calculate an ANOVA table . Let’s do this for age. 
+**Task:**
+Run the code below
+```{r "9_4"}
+age.anova <- anova(lm(age~game_type, data = round1))
+age.anova
+```
+The H0, like the two-sample t-test, says that there is no significant difference between the groups, just with more groups being compared. So if we could reject the H0, we would be able to say that there is a significant difference between the treatment groups. Since our P-value is 0.2043, we cannot reject the H0 and can not find any significant differences, which is good for an experiment. The second column shows us the residual which we will ignore for this comparison.
+
+We will now run seven ANOVAs. However, we will not simply write the above command seven times with different characteristics, but rather use the function `lapply`.
+
+**Task:** Run the following code
+```{r "9_5"}
+lapply(round1[,c("female",   "age", "married", "education", "assets", 
+                           "riskpref6", "owner")], function(x) anova(lm(x ~ ___)))
+
+```
+
+
+
+Quiz: Did we find evidence that the groups in the different treatments were not balanced?
+
+[1]: No
+[2]: Yes
+
+```{r eval=FALSE}
+# Run line to answer the quiz above
+answer.quiz("six")
+```
+
+
+
+We now obtain seven ANOVA results and can see that none of them is significant. The lowest p-value is 0.2007 for riskpref6. This means that we cannot accept H1 in any case, which implies that we found no evidence that the groups are not randomized within their groups or that any characteristic we tested is not evenly distributed among the treatment groups. 
+In conclusion, we can say that our experimental participants do not perfectly match a normal person who would take out a microloan, as we found in Section 5.1. However, there was no evidence in the experiment that any characteristic was overrepresented in the experimental groups. We will now analyze how the scenarios affected the players in group contracts with joint liability to determine whether players took advantage of increasing information flows to increase coordination rates. To this end, we run a multinominal logit regression.
+
+
+
+## Exercise 6. Multinominal Logit Regression
+
+In this chapter, we will run multinomial logit regressions. We will analyze how the manipulations implemented, and thus the increase in information for the players, changed a group's ability to invest in either **one safe, one risky**, or **both risky** compared to both investing in the safe project. We do this to see if players play tactically. For example, one might play safe while the other plays risky if communication is available. In the next round, the one playing safe now plays risky and vice versa. With this tactic, the probability of the group being kicked out of a game with dynamic incentives is zero. However, players must trust each other, as one player might betray the other and play risky instead of safe in a late round, thinking that he is maximizing his utility.
+We will divide the groups into subgroups called safer pair, mixed pair, and riskier pair. Subjects are considered to be safe borrowers if their rate of risky project choice in the `Individual Repeated One Shot Game` is at or below the twenty-fifth percentile. Subjects are classified as risky borrowers if their rate of risky project choices in the `Individual Repeated One Shot Game`` is at or above the seventy-fifth percentile.
+
+A safer pair is a pair where two players who are most risk averse (two safer borrowers) form a group. A mixed pair is a pair with only one player who is most risk averse, with one player in group two or three, and a riskier pair is a pair without a risk averse player.
+
+
+A multinomial logit regression is appropriate for this question because the dependent variable in a multinomial logit regression has more than two outcomes and is a nominal variable (one is not better than the other). This is the case here with three nominal dependent variables (the three possible outcomes: both choosing risky, one choosing risky, one choosing safe, and both choosing safe). One outcome is taken as the base outcome, called the omitted outcome. The other two variables are then analyzed in comparison to the omitted outcomme. The explanation for a ``multinomnal logit regression` can be found in the infobox. 
+
+```{r eval=FALSE}
+# Run for additional info in the Viewer pane
+info("Multinominal Logit Regression")
+```
+
+Summarizing the infobox, we need to understand that a result of, say, 0.05 on *monitor* for the group that chooses both risky outcomes means that the relative risk ratio of the two risky outcomes to the both safe outcome increases by a factor of , exp(0.05) =1.051 on average when this scenario is played and everything else is held constant. We need to take the exponential because our regression is logical. When the exponential result is one, the manipulation has no relative effect on the groups. When the value is greater than one, the manipulation has a positive effect with respect to the omitted variable, and when it is less than one, a negative effect is observed. 
+Unfortunately, the calculation and interpretation of a multinomial logit regression (MLR) is more complicated than a linear regression in R. Mainly because, in my opinion, there is no package as good as `lfe` with the `felm` function.
+To calculate the MLR we will use the function `multinom` from the package `nnet`. 
+
+
+The package `nnet` gives us the possibility to compute Multinominal Logit Regression in R.
+The dependent variable must be a factor, so we need to convert pairoutcome to a factor. 
+We also need to add which outcome to omit using the relevel command.
+Once we do this, the form will have the same syntax as the `lm` form we created earlier. 
+
+
+## Preparing the data for MLR
+
+Before we install the package, we will load and filter our dataset again. We filter the data to show only six rounds and group games (jlgame == 1 in the data frame) and call it MLRdata.
+
+**Task:** Run the code
+```{r "10_1"}
+game <- read.dta("AEJApp20070006gamedata.dta")
+MLRdata<- filter(game, round <=6,jlgame==1)
+```
+
+Now we have to convert *round* and *pairoutcome* into a factor. For this we use the command **as.factor**. 
+In the next step, we then tell R which result to omit for the MLR. In this case, it will be the outcome that both choose the safe project. In the data, the output pair can take the values 0, 1, and 2. 0 means that both choose the safe project. 1 means that both players play risky, and 2 means that one plays risky and one plays safe. Therefore, we must set 0 as the reference outcome. 
+
+
+**Task:** Run the code to covert round and pairoutcome to a factor:
+```{r "10_2"}
+MLRdata$round <- as.factor(MLRdata$___)
+MLRdata$pairoutcome <- ___(MLRdata$pairoutcome)
+
+
+```
+
+## Calculating MLRs
+
+Now that we have everything ready for the MLRs, we just need to add the relevel so that R knows which outcome to omit. As described above, we will calculate the scenarios played once with and once without dynamic incentives for each risk group alone and also for all groups to have a reference. We start with the interpretation for all groups without dynamic incentives. Clustered robust standard errors are obtained in the paper, unfortunately we cannot replicate these in R for multinomial logit regression, so we will not have clustered robust standard errors and will have different p-values and standard errors than the results in the paper.
+**Task:** Run the code
+```{r "10_3"}
+MLRdata$pairoutcome <- relevel(MLRdata$pairoutcome, ref = "0")
+library(nnet)
+MLR_Allpairs_nodyn <- multinom(pairoutcome ~ monitor+ talking+  ptnrchoice+ days_played+round, data =subset(MLRdata, MLRdata$dynamic==0))
+summary (MLR_Allpairs_nodyn)
+```
+We now get two coefficients for each scenario. The first is the coefficient for the case where both choose the risky outcome, the second is the coefficient for the risky and the safe outcome. Communication, on average across all pairs, increases the probability that both choose the risky outcome by exp(0.334)=1.397 relative to the probability that both choose the safe outcome, with no dynamic incentives, when everything else is held constant. Under this condition, players could discuss and decide that they would both choose the risky project to maximize their outcome without feeling bad about forcing the other person to play the risky project. We also got the result of OLS calculation that communication increases the risky outcome for both of them, so our result is consistent with what we calculated before. We can get the exp results in R by using the command "exp(coef(MLR_Allpairs_nodyn))". However, the interpretation is also possible with the output of the regression, we just cannot give the exact percentage change compared to the omitted result. However, a positive or negative effect with respect to the omitted group is still visible
+
+As we saw above, the summary function does not show p-values. To solve this problem, we can calculate them manually using the following formula.
+```{r "10_4"}
+z <- summary(MLR_Allpairs_nodyn)$coefficients/summary(MLR_Allpairs_nodyn)$standard.errors
+p.value <- (1 - pnorm(abs(z), 0, 1)) * 2
+p.value
+```
+We would have to do this for each MLR, or we can use Stargazer, which is the easier way. Stargazer can show us the P values with report = ("vc*p"), but since we are getting the significance levels anyway, we will not show the p values, but the standard errors. In stargazer we can also decide which coefficients we want to keep.
+
+
+**Task:** Run the code
+```{r "10_5",results='asis'}
+stargazer(MLR_Allpairs_nodyn,
+          out="first_MLR.html",
+          type="html",
+          digits=3,
+          title = "All pairs without dynamic incentives",
+          keep= c("monitor", "talking", "ptnrchoice", "Constant"),  
+          add.lines =list(c("Dynamic incentives", rep(c("No", "No")))))
+```
+Now we can see which coefficients are significant and we can better interpret the coefficients that are more important to us, since we have not shown the unnecessary coefficients like **days_played** or the **rounds**.
+We see that "talking" is the only significant coefficient besides the intercept, and since we have already interpreted this coefficient, we are done interpreting this Stargazer output. Now to run multiple MLRs, we do the same as we just did, only with the different subsets of the data. After running the MLRs, we analyze them individually for all, safer, mixed, and riskier pairs using stargazer.
+
+**Task:** Run the following code
+```{r "10_6",results='asis'}
+MLR_Allpairs_dyn<- multinom(pairoutcome ~ monitor+ talking+  ptnrchoice+ days_played+round, data =subset(MLRdata, MLRdata$dynamic==1))
+
+MLR_saferpairs_nodyn<- multinom(pairoutcome ~ monitor+ talking+  ptnrchoice+ days_played+round, data =subset(MLRdata, MLRdata$dynamic==0&theta1pair==1))
+
+MLR_saferpairs_dyn<- multinom(pairoutcome ~ monitor+ talking+  ptnrchoice+ days_played+round, data =subset(MLRdata, MLRdata$dynamic==1&theta1pair==1))
+
+MLR_mixedpairs_nodyn<- multinom(pairoutcome ~ monitor+ talking+  ptnrchoice+ days_played+round, data =subset(MLRdata, MLRdata$dynamic==0&mixedpair==1))
+
+MLR_mixedpairs_dyn<- multinom(pairoutcome ~ monitor+ talking+  ptnrchoice+ days_played+round, data =subset(MLRdata, MLRdata$dynamic==1&mixedpair==1))
+
+MLR_riskypairs_nodyn<- multinom(pairoutcome ~ monitor+ talking+  ptnrchoice+ days_played+round, data =subset(MLRdata, MLRdata$dynamic==0&riskypair==1))
+
+MLR_riskypairs_dyn<- multinom(pairoutcome ~ monitor+ talking+  ptnrchoice+ days_played+round, data =subset(MLRdata, MLRdata$dynamic==1&riskypair==1))
+
+
+stargazer(MLR_Allpairs_nodyn, MLR_Allpairs_dyn, type="html", title = "All Pairs", out= "MLR Allpairs.html", column.labels =c("  Both risky  ", "  One risky,one safe  ","  Both risky  ", "  One risky, one safe  "), style = "aer",keep= c("monitor", "talking", "ptnrchoice", "Constant","1"),digits=3,add.lines =list(c("Dynamic incentives", rep(c("No","No","Yes","yes")))))
+```
+The Stargazer output gives us the result for **all pairs**. We do not show the other three results yet. 
+The first column shows us how the scenarios affect the probability that both players choose the risky option relative to the probability that both choose the safe option. In addition, the first and second columns do not apply dynamic incentives. The second column gives the probability of one choosing the safe project and one choosing the risky project, relative to the probability of both choosing the safe project. The first two rows are the same results as we calculated before. The third column is like the first, but with dynamic incentives, and the fourth is like the second, but with dynamic incentives. All the results we will analyze follow this pattern, only for different groups of risk-taking/risk-avoiding players. As we can see, being able to talk to each other in a group significantly increases the probability that at least one will play the risky project relative to the two playing the safe outcome. With dynamic incentives, the partner choice scenario decreases the probability that at least one plays the risky project relative to both choosing the safe outcome. This is also what we observed previously, as safer players probably try to partner with other safe players and then both play safe when dynamic incentives are active. 
+
+## Analyizing the results
+
+Now let’s take a look at the safer pairs. 
+```{r "10_7",results='asis'}
+stargazer(MLR_saferpairs_nodyn, MLR_saferpairs_dyn, type="html", title = "Safer pairs", out= "MLR Safer pairs.html", column.labels =c("Both risky", "One risky,one safe","Both risky", "One risky, one safe"), style = "aer",keep= c("monitor", "talking", "ptnrchoice", "Constant"),digits=3,add.lines =list(c("Dynamic incentives", rep(c("No","No","Yes","Yes")))))
+```
+It turns out that without dynamic incentives only one coefficient is significant on the 10% level, namely Monitor. However, with clustered robust standard errors this is not the case, so we do not consider this result. The constant is significant for both choosing the risky project. It is negative, especially when dynamic incentives are active. To interpret the constant, we need to take the inverse logit. The inverse logit tells us the probability of the outcome occurring compared to the omitted outcome. For example, the constant of -19,185 is ⅇ^(-19,185):(1+ⅇ^(-19,185) ], which is equivalent to 4.656508e-09. Thus, the probability that a risk-averse pair will choose the double risky optiont is 4.656508e-09%, compared to the probability that both will choose the safe project when dynamic incentives are active and no other effect is in place. This fits our theory that risk-averse players want to play the doubly safe project. 
+For our interpretation, we can say that if the constant is positive, the probability of this outcome is greater than 50% compared to "both choose the safe project" and if the constant is negative, the probability is less than 50%. The two risk-averse pairs of players have a negative sign in front of the constant for all outcomes and would therefore prefer to choose the safe project. Nothing else in the output was significant, so we cannot tell which outcome increases or decreases the probability of a different outcome compared to the two risky outcomes. In the other groups with more risk seeking players, we get some significant results that we can interpret. 
+
+Next we will look at mixed pairs.
+**Task:** Fill in the missing chunks then run the stargazer output
+```{r "10_8",results='asis'}
+stargazer(___, MLR_mixedpairs_dyn, type="html", title = "Mixed pairs", out= "MLR mixed pairs.html", column.labels =c("Both risky", "One risky,one safe","Both risky", "One risky, one safe"), style = "aer",keep= c("monitor", "talking", "ptnrchoice", "Constant"),digits=3,add.lines =list(c("Dynamic incentives", rep(c("No","No","Yes","Yes")))))
+
+
+```
+For mixed pairs, we have significant results for communication (talking) in both outcomes of the table when dynamic incentives are active. We see that communication increases the probability that at least one chooses the risky project relative to the probability that both choose the safe project. Also, the probability that both choose the risky project increases relative to that that both choose the safe project when communication between players is possible. Only `talking` is significant on the 5 percent level in the paper with clustered robust standard errors and therefore we will ignore the other results,
+
+Let’s now look at the most risk seeking groups
+```{r "10_9",results='asis'}
+stargazer(MLR_riskypairs_nodyn, MLR_riskypairs_dyn, type="html", title = "Riskier pairs", out= "MLR riskier pairs.html", column.labels =c("Both risky", "One risky,one safe","Both risky", "One risky, one safe"), style = "aer",keep= c("monitor", "talking", "ptnrchoice", "Constant"),digits=3,add.lines =list(c("Dynamic incentives", rep(c("No","No","Yes","Yes")))))
+```
+Unfortunately, these results also do not yield significant results at the 5% level in the paper. Only partner choice is significant at the 10% level for the outcome "both choose risky". Monitoring is significant at the 10% level for the outcome "one risky, one safe", but since we will only analyze results that are significant at the 5% level, we will not consider them. In summary, communication increases the likelihood that at least one person will choose the risky project and therefore tactical discussion is likely to occur. When partner choice is active and dynamic incentives are active, safe players try to find other safe players and then both play the risk-free project, thus partner choice significantly reduces the possibility that both play risky.
+With this last Stargazer output, we have concluded this chapter and will now move on to the conclusion and summarize what we have concluded from the experiments and the regressions.
+
+
+
+
+## Exercise 7 Conlusion
+
+In this interactive problemset, we aimed to find out which incentives increase the repayment rate or risk-taking behavior of microcredit subjects. 
+To this end, we analyzed data from an experiment conducted in Peru over a seven-month period. We began by understanding how the experiment was structured and how many participants played the scenarios. In the next step, we calculated for each scenario the percentage of times the risky project was played and how often players repaid their loans. 
+We then calculated our first linear model to interpret which scenario increased or decreased the choice of the risky project or the repayment rate. Because players had the option to participate in more than one experiment and their decision would affect them, we ran clustered robust standard errors at the player level. We also controlled for round effects as well as time-invariant
+participant characteristics with fixed effects. Using the linear regressions, we found that dynamic incentives strongly decrease the decision to invest in a risky project and that joint liability contracts increase the decision to invest in a risky project. After reaching this conclusion, we tested whether the individuals who participated in the experiment were representative of an individual who would take out a microloan. Unfortunately, this was not the case, but since the participants in the experiment and the average person who would apply for a microloan gave the same answer to a question about risk-taking behavior, we can say that our participants are at least somewhat representative. In the next step, we learned how to test whether the experiment was randomized within the experiment. We found no evidence that any characteristic that might affect our result was overrepresented in any scenario. Therefore, we can say that the effect we calculated with linear regression is partially representative of a microcredit client. However, because participants had the opportunity to participate in more than one gaming session, validity was poorer than in a perfect between-subjects design in which each participant would play only once. However, we addressed this issue by using fixed effects and clustered robust standard errors at the player level.
+In the last exercises, we wanted to see how group dynamics and possibly tactics affect project selection for credit groups. We found that dynamic incentives greatly reduce the possibility of players choosing the risky projects, which we also found in the linear regression. However, group lending increases the probability of choosing a risky project because the other lending partner can stand in for one if the risky project fails (insurance effect). Communication increases the probability that at least one player will choose the risky project, implying that we are likely to have some form of tactical decision making. In group contracts, risk-averse players matched with riskier players may switch from the safe to the risky project, even if they would prefer the double safe outcome. It would therefore make sense for microcredit institutions to create dynamic incentives, since excluding borrowers from future contracts if they do not repay their last loan greatly increases the repayment rate. They should also move away from group lending contracts, as these increase the likelihood of risky decision making. The downside of dynamic incentives is that borrowers may take too little risk and therefore not choose the socially optimal project. Future studies could conduct these types of experiments in other countries to determine if there are differences across ethnicities.
+
+## Exercise 8 References
+
+## Bibliography:
+
+Baltagi, B. H. (2011). Econometrics (5th ed.). Springer texts in business and economics. Springer. 
+
+Browne, M. J., Jäger, V., Richter, A., & Steinorth, P. (2022). Family changes and the willingness to take risks. Journal of Risk and Insurance, 89(1), 187–209. https://doi.org/10.1111/jori.12341
+
+Cameron, A. C., & Miller, D. L. (2015). A practitioner's guide to cluster-robust inference. Journal of Human Resources.
+
+Datta, S., & Sahu, T. N. (2022). How Far is Microfinance Relevant for Empowering Rural Women? An Empirical Investigation. Journal of Economic Issues, 56(1), 97–112. https://doi.org/10.1080/00213624.2022.2019552
+
+Gavin Finch, D. K. Big Money Backs Tiny Loans That Lead to Debt, Despair and Even Suicide. https://www.bloomberg.com/graphics/2022-microfinance-banks-profit-off-developing-world/).
+
+Giné, X., Jakiela, P., Karlan, D., & Morduch, J. (2010). Microfinance Games. American Economic Journal: Applied Economics, 2(3), 60–95. https://doi.org/10.1257/app.2.3.60
+
+Karlan, D. S. (2005). Using Experimental Economics to Measure Social Capital and Predict Financial Decisions. American Economic Review, 95(5), 1688–1699. 
+
+Kim, D. G. Clustering Standard Errors at the 'Session' Level. https://www.cesifo.org/DocDL/cesifo1_wp8386.pdf
+
+Lakshmi, K., Mahaboob, B., Rajaiah, M., & Narayana, C. (2021). Ordinary least squares estimation of parameters of linear model. J. Math. Comput. Sci., 11(2), 2015–2030. https://doi.org/10.28919/10.28919/jmcs/5454
+
+Luepsen, H. (2021). ANOVA with binary variables: the F-test and some alternatives. Communications in Statistics - Simulation and Computation, 1–25. 
+
+Malik, K., Meki, M., Morduch, J., Ogden, T., Quinn, S., & Said, F. (2020). COVID-19 and the future of microfinance: evidence and insights from Pakistan. Oxford Review of Economic Policy, 36(Supplement_1), S138-S168. https://doi.org/10.1093/oxrep/graa014
+
+Rasch, D., Kubinger, K. D., & Moder, K. (2011). The two-sample t test: pre-testing its assumptions does not pay off. Statistical Papers, 52(1), 219–231. https://doi.org/10.1007/s00362-009-0224-x
+
+Sachs, L. (1990). Statistische Methoden: Planung und Auswertung (7., überarb. Aufl.). Springer. 
+
+Samapti, G, & Gautam, G (2005). Microcredit for Income Generation: The Role of Rosca. Economic and Political Weekly, 40(14), 1470–1473. http://www.jstor.org/stable/4416436
+
+Schmider, E., Ziegler, M., Danay, E., Beyer, L., & Bühner, M. (2010). Is It Really Robust? Methodology, 6(4), 147–151. https://doi.org/10.1027/1614-2241/a000016
+
+The Nobel Peace Prize 2006. https://www.nobelprize.org/prizes/peace/2006/summary/
+
+
+## R Packages
+
+Christoph Glur. (2020). data.tree: General Purpose Hierarchical Data Structure [Computer software]. https://CRAN.R-project.org/package=data.tree
+
+Gaure. (2022). lfe: Linear group fixed effects. R package version 2.8-8 [Computer software]. https://cran.r-project.org/web/packages/lfe/lfe.pdf
+
+Hadley, W. (2016). Ggplot2 [Computer software]. Springer. Switzerland. https://ggplot2.tidyverse.org
+
+Hadley Wickham, Romain François and Lionel Henry and Kirill Müller. (2021). dplyr: A Grammar of Data Manipulation [Computer software]. https://CRAN.R-project.org/package=dplyr
+
+Kranz, S. (2015): RTutor. “Creating R problem sets with automatic assessment of student's solutions”, R package version 2020.11.25, https://github.com/skranz/RTutor
+
+Laurent Berg. (2018). Efficient estimation of maximum likelihood models with multiple fixed-effects: the {R} package {FENmlm} [Computer software]. CREA Discussion Papers. https://cran.r-project.org/web/packages/fixest/index.html
+
+Marek Hlavac. (2022). stargazer: Well-Formatted Regression and Summary Statistics Tables [Computer software]. https://CRAN.R-project.org/package=stargazer
+
+R Core Team. (2020). foreign: Read Data Stored by 'Minitab', 'S', 'SAS', 'SPSS', 'Stata', 'Systat', 'Weka', 'dBase', … [Computer software]. https://CRAN.R-project.org/package=foreign
+
+Richard Iannone. (2022). DiagrammeR: Graph/Network Visualization [Computer software]. https://CRAN.R-project.org/package=DiagrammeR
+
+Venables, W. N., & Ripley, B. D. (2003). Modern applied statistics with S [Computer software]. Springer. New York [u.a.). https://www.stats.ox.ac.uk/pub/MASS4/
+
+
